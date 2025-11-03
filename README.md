@@ -151,8 +151,6 @@ python rag_query.py --question "What is a quadratic equation?"
 # Test multimodal retrieval
 python rag_query.py --question "Describe the trapezoid diagram"
 
-# Test with caching
-python rag_query.py --question "What is Pythagoras theorem?" --cache
 
 # Run full test suite
 bash test_pipeline.sh
