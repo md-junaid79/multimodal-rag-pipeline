@@ -245,12 +245,6 @@ python rag_query.py -q "Explain solving quadratic equations"
 # 3. Multimodal retrieval
 python rag_query.py -q "What does the trapezoid diagram show?"
 
-# 4. Caching proof
-python rag_query.py -q "What is Pythagoras theorem?" --cache
-python rag_query.py -q "What is Pythagoras theorem?" --cache  # Faster!
-
-# 5. Summarization
-python rag_query.py -q "What is arithmetic progression?" --summarize
 ```
 
 ## Next Steps
