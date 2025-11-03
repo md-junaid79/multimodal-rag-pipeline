@@ -9,7 +9,6 @@ A fully functional Retrieval-Augmented Generation (RAG) system for querying comp
 - **Intelligent Chunking**: Preserves context during text chunking
 - **Vector Search**: Qdrant-based semantic search
 - **RAG Pipeline**: Complete retrieval-augmented generation workflow
-- **Caching**: Supports both prompt caching and conversational memory
 - **Summarization**: Optional context summarization before answer generation
 
 ## 📋 Prerequisites
@@ -25,10 +24,10 @@ A fully functional Retrieval-Augmented Generation (RAG) system for querying comp
 1. **Ollama** - Local LLM inference
 2. **Qdrant** - Vector database
 
-<!-- qwen3-vl:2b             1.9 GB -->
-mistral:7b              4.4 GB
-llava:latest            4.7 GB
-nomic-embed-text        274 MB
+ollama models  : 
+mistral:7b               4.4 GB,
+llava:latest             4.7 GB,
+nomic-embed-text         274 MB.
 
 # Quick Start Guide
 
@@ -99,7 +98,7 @@ docker run -p 6333:6333 qdrant/qdrant
 ollama serve  # If not already running as service
 
 # In another terminal, pull models:
-ollama pull mistral:7b 
+ollama pull mistral:7b      #or mistral:latest
 ollama pull llava
 ollama pull nomic-embed-text
 ```
@@ -116,12 +115,7 @@ mkdir -p data
 # Save as: data/Maths_Grade_10.pdf
 ```
 
-### 5. Verify Setup
 
-```bash
-# Run verification script
-python verify_setup.py
-```
 
 **Expected output:**
 ```
@@ -146,15 +140,13 @@ This will:
 
 ```bash
 # Simple test
-python rag_query.py --question "What is a quadratic equation?"
+python rag_query.py --question "What is a angle of sight?"
 
 # Test multimodal retrieval
-python rag_query.py --question "Describe the trapezoid diagram"
+python rag_query.py --question "Describe heights and distances"
 
 
-# Run full test suite
-bash test_pipeline.sh
-```
+
 
 ## Common Issues & Solutions
 
@@ -168,15 +160,6 @@ ollama serve
 sudo systemctl start ollama
 ```
 
-### Issue: "Qdrant connection refused"
-**Solution:**
-```bash
-# Check if Qdrant container is running
-docker ps | grep qdrant
-
-# Restart if needed
-docker-compose restart
-```
 
 ### Issue: "Model not found"
 **Solution:**
@@ -231,17 +214,24 @@ curl http://localhost:6333/
 curl http://localhost:11434/api/tags
 ```
 
-## Testing the 5 Required Demonstrations
+## Testing the  Required Demonstrations
 
 ```bash
 # 1. Indexing
 python setup_pipeline.py
 
 # 2. Standard RAG query
-python rag_query.py -q "Explain solving quadratic equations"
+python rag_query.py -q "Explain solving cos and sin equations for finding heights and distances "
 
 # 3. Multimodal retrieval
-python rag_query.py -q "What does the trapezoid diagram show?"
+python rag_query.py -q "What does the river diagram show?"
+
+#4: Summarization
+```bash
+python rag_query.py --question "What is angle of depression?" --summarize
+# Verify: Shows both summary and final answer
+```
+
 
 ```
 
@@ -253,20 +243,38 @@ python rag_query.py -q "What does the trapezoid diagram show?"
 4. 🎯 Experiment with different PDFs
 5. 📊 Monitor performance and optimize
 
-## Performance Tips
-
-- **GPU**: If available, Ollama will automatically use it (10x faster)
-- **Batch processing**: Process multiple images at once
-- **Cache**: Enable `--cache` for repeated queries
-- **Chunk size**: Adjust in `.env` for better/worse context
-
 ## Getting Help
 
 - Check `README.md` for detailed documentation
-- Run `python rag_query.py --help` for all options
 - Review logs in `outputs/` directory
 - Open GitHub issue for bugs
 
 ---
 
-**Ready to query your educational content! 🚀**
+## 🎓 Key Components
+
+| Component | Technology | Purpose |
+|-----------|------------|---------|
+| PDF Parser | PyMuPDF | Extract text & images |
+| Vision Model | Qwen2-VL | Image→Text conversion |
+| Chunking | LangChain | Context-aware splitting |
+| Embeddings | nomic-embed-text | Vector generation |
+| Vector DB | Qdrant | Semantic search |
+| LLM | llama3 | Answer generation |
+| Framework | LangChain | Pipeline orchestration |
+
+## 📝 License
+
+MIT License - See LICENSE file
+
+## 🤝 Contributing
+
+Contributions welcome! Please open an issue or PR.
+
+## 📧 Contact
+
+For questions or issues, please open a GitHub issue.
+
+---
+
+**Built with ❤️ for educational content processing**

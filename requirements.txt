@@ -1,0 +1,11 @@
+langchain
+langchain-community
+langchain-classic
+langchain-ollama
+langchain-qdrant
+qdrant-client
+pymupdf==1.23.8
+pytesseract==0.3.10  # Backup OCR if needed
+Pillow==10.1.0
+python-dotenv==1.0.0
+pdf2image
