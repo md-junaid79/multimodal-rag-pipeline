@@ -1,20 +1,17 @@
-import os, fitz, json, re
-from langchain_community.document_loaders import PyMuPDFLoader
-import pprint
-from pdf2image import convert_from_path
-from PIL import Image
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-# from langchain_community.embeddings import 
-from langchain_qdrant import QdrantVectorStore
-from qdrant_client import QdrantClient
-from langchain_community.vectorstores import Qdrant
-from langchain_ollama import OllamaLLM
-from langchain_ollama import OllamaEmbeddings
 import base64
-import subprocess
-from src.prompts import SYSTEM_PROMPT, diagram_prompt, page_prompt
+import json
+import os
+import re
 from typing import List
+
+import fitz
+from langchain_community.document_loaders import PyMuPDFLoader
+from langchain_community.vectorstores import Qdrant
 from langchain_core.documents import Document
+from langchain_ollama import OllamaEmbeddings, OllamaLLM
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+from src.prompts import SYSTEM_PROMPT, diagram_prompt, page_prompt
 
 
 def extract_pdf_text(pdf_path):
@@ -23,7 +20,8 @@ def extract_pdf_text(pdf_path):
     print(f"\n🔹 Extracted {len(docs)} text segments from PDF.")
     return docs
 
-def filter_to_minimal_docs(docs) :
+
+def filter_to_minimal_docs(docs):
     """
     Given a list of Document objects, return a new list of Document objects
     containing only 'source' in metadata and the original page_content.
@@ -33,17 +31,19 @@ def filter_to_minimal_docs(docs) :
         src = doc.metadata.get("source")
         sub = doc.metadata.get("subject")
         page = doc.metadata.get("page")
-        
+
         minimal_docs.append(
             Document(
                 page_content=doc.page_content,
-                metadata={"source": src, "subject":sub, "page":page}
+                metadata={"source": src, "subject": sub, "page": page},
             )
         )
     return minimal_docs
 
 
-def extract_pdf_images(pdf_path, output_dir="images", min_width=40, min_height=40, min_pixels=1000,dpi=300):
+def extract_pdf_images(
+    pdf_path, output_dir="images", min_width=40, min_height=40, min_pixels=1000, dpi=300
+):
     """Extract images but skip tiny/mask/duplicate images.
     Adjust min_width/min_height/min_pixels to tune filtering.
     """
@@ -57,7 +57,9 @@ def extract_pdf_images(pdf_path, output_dir="images", min_width=40, min_height=4
 
     for page_num in range(2):
         page = doc[page_num]
-        image_list = page.get_images(full=True)  # tuples include (xref, smask, w, h, bpc, cs, ...)
+        image_list = page.get_images(
+            full=True
+        )  # tuples include (xref, smask, w, h, bpc, cs, ...)
         if not image_list:
             continue
 
@@ -95,37 +97,40 @@ def extract_pdf_images(pdf_path, output_dir="images", min_width=40, min_height=4
             with open(image_path, "wb") as f:
                 f.write(image_bytes)
 
-            print(f"Saved: {image_path}",end= "  &  ")
+            print(f"Saved: {image_path}", end="  &  ")
             tot_embedded_imgs += 1
-            caption = run_qwen_caption(image_path,short=True)
+            caption = run_qwen_caption(image_path, short=True)
             captions[image_path] = caption
     # Method 2: Render each page as image (captures vector graphics)
-    
+
     print("\n🔹📝 Rendering each page as image...\n")
 
-    zoom = dpi / 72  
+    zoom = dpi / 72
     mat = fitz.Matrix(zoom, zoom)
-    
+
     for page_num in range(2):
         page = doc[page_num]
         pix = page.get_pixmap(matrix=mat)
         image_path = f"{output_dir}/page{page_num + 1}_full.png"
         pix.save(image_path)
-        print(f"  Saved: {image_path}",end= "  &  ")
-        
+        print(f"  Saved: {image_path}", end="  &  ")
+
         caption = run_qwen_caption(image_path)
-        captions[image_path] = caption       
-         
+        captions[image_path] = caption
+
     # Save all captions for reuse
     with open("captions.json", "w", encoding="utf-8") as f:
         json.dump(captions, f, ensure_ascii=False, indent=2)
 
-    print(f"\n♾️ Extracted {tot_embedded_imgs} images from {len(doc)} pages successfully. ✅")
+    print(
+        f"\n♾️ Extracted {tot_embedded_imgs} images from {len(doc)} pages successfully. ✅"
+    )
     print(f"♾️ Rendered {len(doc)} full pages")
     print(f"♾️ {len(captions)} Captions generated for  images and diagrams.")
-    
+
     return captions
-    
+
+
 def run_qwen_caption(image_path, short=False, model="llava"):
     """Generate caption for image using an Ollama vision LLM with a system prompt."""
     if short:
@@ -134,7 +139,7 @@ def run_qwen_caption(image_path, short=False, model="llava"):
         user_prompt = page_prompt
 
     # Combine the system-level instruction with the user's request
-    final_prompt = SYSTEM_PROMPT  + user_prompt
+    final_prompt = SYSTEM_PROMPT + user_prompt
 
     with open(image_path, "rb") as img_file:
         image_b64 = base64.b64encode(img_file.read()).decode("utf-8")
@@ -161,11 +166,11 @@ def chunk_documents(minimal_docs, captions):
     for doc in chunks:
         page = doc.metadata.get("page")
         if page is not None:
-            page_map.setdefault(page+1, []).append(doc)
+            page_map.setdefault(page + 1, []).append(doc)
 
     # Step 3: Attach each image caption to the last chunk from that page
     for path, caption in captions.items():
-        match = re.search(r'page(\d+)', path)
+        match = re.search(r"page(\d+)", path)
         if not match:
             continue
         page_num = int(match.group(1))
@@ -185,12 +190,13 @@ def index_to_qdrant(chunks):
         documents=chunks,
         embedding=embeddings,
         url="http://localhost:6333",
-        collection_name="edu_content"
-        )
+        collection_name="edu_content",
+    )
     print("✅ Qdrant collection 'edu_content' created and indexed.")
 
 
 # MAIN EXECUTION
+
 
 def main():
     pdf_path = "./data/jemh109.pdf"
@@ -204,7 +210,7 @@ def main():
 
     # Step 3: Chunk documents and attach image captions
     chunks = chunk_documents(minimal_docs, captions)
-    
+
     # Step 4: Indexing embeddings to Qdrant
     index_to_qdrant(chunks)
 
