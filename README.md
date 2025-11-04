@@ -1,11 +1,11 @@
 # Multimodal RAG Pipeline for Educational Content
 
-A fully functional Retrieval-Augmented Generation (RAG) system for querying complex, multimodal PDF content using LangChain, Ollama (Qwen2-VL), and Qdrant.
+A fully functional Retrieval-Augmented Generation (RAG) system for querying complex, multimodal PDF content using LangChain, Ollama (llava & Mistral), and Qdrant.
 
 ## 🎯 Features
 
 - **Multimodal Processing**: Extracts and processes both text and images from PDFs
-- **Vision Model Integration**: Uses Qwen2-VL to convert images/diagrams into searchable text descriptions
+- **Vision Model Integration**: Uses llava( Large Language and Visual Assistant) to convert images/diagrams into searchable text descriptions
 - **Intelligent Chunking**: Preserves context during text chunking
 - **Vector Search**: Qdrant-based semantic search
 - **RAG Pipeline**: Complete retrieval-augmented generation workflow
@@ -24,12 +24,13 @@ A fully functional Retrieval-Augmented Generation (RAG) system for querying comp
 1. **Ollama** - Local LLM inference
 2. **Qdrant** - Vector database
 
-ollama models  : 
-mistral:7b               4.4 GB,
-llava:latest             4.7 GB,
-nomic-embed-text         274 MB.
+|OLLAMA MODELS  | SIZE |
+|---------------|------|
+|`mistral:7b`    |    4.4 GB|
+|`llava:latest`   |          4.7 GB|
+|`nomic-embed-text`|         274 MB|
 
-# Quick Start Guide
+## Quick Start Guide
 
 Get the RAG pipeline running in 10 minutes!
 
@@ -45,31 +46,27 @@ python --version  # Should be 3.10 or higher
 
 #### Install Docker
 ```bash
-# Ubuntu/Debian
-sudo apt-get install docker.io
+# Windows: Download from docker.com
 
 # macOS
 brew install docker
 
-# Windows: Download from docker.com
 ```
 
 #### Install Ollama
 ```bash
-# Linux
-curl -fsSL https://ollama.com/install.sh | sh
+# Windows: Download from ollama.com
 
 # macOS
 brew install ollama
 
-# Windows: Download from ollama.com
 ```
 
 ### 2. Clone and Setup Project
 
 ```bash
 # Clone repository
-git clone <your-repo-url>
+git clone https://github.com/md-junaid79/multimodal-rag-pipeline.git
 cd multimodal-rag-pipeline
 
 # Create virtual environment
@@ -98,7 +95,7 @@ docker run -p 6333:6333 qdrant/qdrant
 ollama serve  # If not already running as service
 
 # In another terminal, pull models:
-ollama pull mistral:7b      #or mistral:latest
+ollama pull mistral      #or mistral:latest
 ollama pull llava
 ollama pull nomic-embed-text
 ```
@@ -109,20 +106,14 @@ ollama pull nomic-embed-text
 # Create data directory
 mkdir -p data
 
-# Download the PDF from Google Drive link:
-# https://drive.google.com/file/d/1J9LBK7I5-eMVcJPnqGDNBrndS6_bcyd5/view
-
-# Save as: data/Maths_Grade_10.pdf
 ```
+> Download the PDF from Google Drive link:
+[📝PDF_LINK](https://drive.google.com/file/d/1J9LBK7I5-eMVcJPnqGDNBrndS6_bcyd5/view)
+
+> Now you are Ready to run setup_pipeline.py
 
 
-
-**Expected output:**
-```
-✓ All checks passed! Ready to run setup_pipeline.py
-```
-
-### 6. Index the PDF
+### 5. Index the PDF
 
 ```bash
 python setup_pipeline.py
@@ -130,22 +121,46 @@ python setup_pipeline.py
 
 This will:
 - Extract text and images from PDF (~2 min)
-- Process images with Qwen2-VL (~5-10 min for 40 images)
+- Process images with llava (~5-10 min for 40 images)
 - Generate embeddings (~1 min)
 - Index into Qdrant (~30 sec)
 
 **Total time: ~10-15 minutes**
 
-### 7. Test with Queries
+### 7. Testing 
 
 ```bash
-# Simple test
-python rag_query.py --question "What is a angle of sight?"
+# 1. Indexing
+python setup_pipeline.py
 
-# Test multimodal retrieval
+# 2. Standard RAG query
+python rag_query.py --question "What is a line of sight?"
+
+python rag_query.py -question "Explain solving cos and sin equations for finding heights and distances "
+
+# 3. Multimodal retrieval
+python rag_query.py -question "What does the river diagram show?"
 python rag_query.py --question "Describe heights and distances"
 
+# 4: Summarization
+# Shows both summary and final answer
+python rag_query.py --question "What is angle of depression?" --summarize
 
+python rag_query.py --question "how the height of an object or the distance between two distant objects can be determined with the help of trigonometric ratios?" --summarize
+
+```
+
+## 🎓 Key Components
+
+| Component | Technology | Purpose |
+|-----------|------------|---------|
+| PDF Parser | PyMuPDF | Extract text & images |
+| Vision Model | llava | Image→Text conversion |
+| Chunking | LangChain | Context-aware splitting |
+| Embeddings | nomic-embed-text | Vector generation |
+| Vector DB | Qdrant | Semantic search |
+| LLM | Mistral | Answer generation |
+| Framework | LangChain | Pipeline orchestration |
 
 
 ## Common Issues & Solutions
@@ -156,11 +171,7 @@ python rag_query.py --question "Describe heights and distances"
 # Start Ollama service
 ollama serve
 
-# Or on Linux with systemd:
-sudo systemctl start ollama
 ```
-
-
 ### Issue: "Model not found"
 **Solution:**
 ```bash
@@ -180,20 +191,11 @@ ollama pull nomic-embed-text
 - Close other applications
 - Add more RAM/swap
 
-### Issue: "PDF not found"
-**Solution:**
-```bash
-# Verify PDF location
-ls -lh data/Maths_Grade_10.pdf
 
-# Should show file size (e.g., 15-50 MB)
-```
 
 ## Quick Commands Reference
 
 ```bash
-# Verify setup
-python verify_setup.py
 
 # Index PDF
 python setup_pipeline.py
@@ -202,10 +204,7 @@ python setup_pipeline.py
 python rag_query.py -q "your question"
 
 # Query with options
-python rag_query.py -q "your question" --summarize --cache
-
-# Run all tests
-bash test_pipeline.sh
+python rag_query.py -q "your question" --summarize 
 
 # Check Qdrant status
 curl http://localhost:6333/
@@ -214,54 +213,15 @@ curl http://localhost:6333/
 curl http://localhost:11434/api/tags
 ```
 
-## Testing the  Required Demonstrations
-
-```bash
-# 1. Indexing
-python setup_pipeline.py
-
-# 2. Standard RAG query
-python rag_query.py -q "Explain solving cos and sin equations for finding heights and distances "
-
-# 3. Multimodal retrieval
-python rag_query.py -q "What does the river diagram show?"
-
-#4: Summarization
-```bash
-python rag_query.py --question "What is angle of depression?" --summarize
-# Verify: Shows both summary and final answer
-```
-
-
-```
-
 ## Next Steps
 
 1. ✅ Setup complete? Try custom questions!
 2. 📖 Read full README.md for advanced features
-3. 🔧 Customize config in `.env` file
-4. 🎯 Experiment with different PDFs
-5. 📊 Monitor performance and optimize
+3. 🎯 Experiment with different PDFs
+4. 📊 Monitor performance and optimize
 
-## Getting Help
-
-- Check `README.md` for detailed documentation
-- Review logs in `outputs/` directory
-- Open GitHub issue for bugs
 
 ---
-
-## 🎓 Key Components
-
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| PDF Parser | PyMuPDF | Extract text & images |
-| Vision Model | Qwen2-VL | Image→Text conversion |
-| Chunking | LangChain | Context-aware splitting |
-| Embeddings | nomic-embed-text | Vector generation |
-| Vector DB | Qdrant | Semantic search |
-| LLM | llama3 | Answer generation |
-| Framework | LangChain | Pipeline orchestration |
 
 ## 📝 License
 
