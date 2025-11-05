@@ -221,7 +221,7 @@ curl http://localhost:11434/api/tags
 4. 📊 Monitor performance and optimize
 
 
----
+---hy
 
 ## 📝 License
 
