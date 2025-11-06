@@ -1,15 +1,16 @@
-from langchain_qdrant import QdrantVectorStore
-from langchain_classic.chains import RetrievalQA
-from langchain_ollama import OllamaEmbeddings
-from langchain_ollama import OllamaLLM
-from qdrant_client import QdrantClient
 import argparse
+
+from langchain_classic.chains import RetrievalQA
+from langchain_ollama import OllamaEmbeddings, OllamaLLM
+from langchain_qdrant import QdrantVectorStore
+from qdrant_client import QdrantClient
+
 
 def build_rag_chain():
     embeddings = OllamaEmbeddings(model="nomic-embed-text")
     client = QdrantClient(url="http://localhost:6333")
     qdrant_store = QdrantVectorStore(client=client, collection_name="edu_content", embedding=embeddings)
-    retriever = qdrant_store.as_retriever(search_kwargs={"k": 3})
+    retriever = qdrant_store.as_retriever(search_kwargs={"k": 5})
 
     llm = OllamaLLM(model="mistral")
     qa_chain = RetrievalQA.from_chain_type(
