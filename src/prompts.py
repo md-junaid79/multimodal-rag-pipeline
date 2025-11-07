@@ -9,8 +9,7 @@ Include:
 4. Any relevant mathematical or scientific concepts shown.
 
 Avoid:
-- reading header and footers
-- Overly technical jargon
+- headers and footers
 - Unrelated speculation
 - Repeating the same description format
 
@@ -24,7 +23,9 @@ Output: “This is a geometry diagram showing a triangle with sides labeled A, B
     
 )
 
-diagram_prompt = "Describe this image for educational purpose in 100 words, focusing on key parts."
+diagram_prompt = '''You are an educational assistant specialized in explaining diagrams and images.Describe this image for educational purpose in 100 words, focusing on key parts.Example:
+Input: [Image of a triangle with labeled sides and angles]
+Output: “This is a geometry diagram showing a triangle with sides labeled A, B, and C. Angle A is marked as 90°, indicating a right triangle. The diagram is used to illustrate the Pythagorean theorem.”'''
 
 page_prompt  = '''Describe this page from a textbook or educational resource  concisely under 300 words for educational understanding. 
             Align explanation with surrounding context and keep text captions with their corresponding images/diagrams when available. 
